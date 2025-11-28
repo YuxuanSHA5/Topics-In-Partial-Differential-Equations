@@ -1,0 +1,50 @@
+%% main_q_steady.m
+%  (s0 = 0, alpha = 1)
+
+clear; clc; close all;
+
+%%
+load('mesh4.mat');      
+load('velocity4.mat');  
+
+p = 1;                  
+alpha = 1;              
+f = @(x,y) 0.*x;       
+
+% Dirichlet 
+g.u1 = 5;   
+g.u2 = 10;  
+g.u3 = 15;  
+
+%%  p=1
+[Pb,Tb] = FEmesh(P,T,p);
+
+%% 
+[gauss,weight] = gauss_integration(2*p);
+
+%%  A  b
+As = assemble_A(Pb,Tb,gauss,weight,p,alpha,v);
+b  = assemble_b(Pb,Tb,gauss,weight,p,f);
+
+%% Dirichlet 
+Dbc = index_val_Dirichlet_BC(Pb,Tb,g);
+
+%% 
+[A,b] = add_Dirichlet_BC(As,b,Dbc);
+
+%%  A x = b
+x = A\b;       
+
+%% 
+figure;
+trisurf(Tb, Pb(:,1), Pb(:,2), x);
+view(2); axis equal tight;
+shading interp; colorbar;
+title('Steady solution u (s_0 = 0)');
+xlabel('x'); ylabel('y');
+hold on;
+
+% 
+step = 10;
+idx  = 1:step:size(Pb,1);
+quiver(Pb(idx,1),Pb(idx,2),v(idx,1),v(idx,2),0.5,'k');
